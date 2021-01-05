@@ -10,7 +10,7 @@ def get_input_list():
     return str_input_list
 
 
-def solve_1(seat_layout_list: List[str]):
+def get_occupied_seats(seat_layout_list: List[str], part: int):
     """Finds the number of occupied seats after the seat change has ended.
 
     The state of a seat is described by a character.
@@ -30,6 +30,7 @@ def solve_1(seat_layout_list: List[str]):
 
     Args:
         seat_input_list (list of strings): ['L.L.LLLL.L', 'L...LLL..L', ]
+        part (integer)
     Returns:
         integer: The occupied seats
     """
@@ -40,17 +41,21 @@ def solve_1(seat_layout_list: List[str]):
 
     last_layout_array = seat_layout_array
     while True:
-        updated_layout_array = _get_updated_seat_layout(last_layout_array)
+        if part == 1:
+            updated_layout_array = _get_updated_seat_layout_1(last_layout_array)
+        elif part == 2:
+            updated_layout_array = _get_updated_seat_layout_2(last_layout_array)
+
         # terminate when the two arrays are equal
         if np.array_equal(updated_layout_array, last_layout_array):
             break
 
         last_layout_array = updated_layout_array
 
-    return _get_occupied_seats(updated_layout_array)
+    return _get_occupied_seats_from_layout(updated_layout_array)
 
 
-def _get_updated_seat_layout(seat_layout_array):
+def _get_updated_seat_layout_1(seat_layout_array):
     """Returns an updated seat layout array.
 
     Args:
@@ -65,12 +70,12 @@ def _get_updated_seat_layout(seat_layout_array):
     # O(n * m)
     for row in range(rows):
         for col in range(cols):
-            updated_seat = _get_updated_seat(seat_layout_array, row, col)
+            updated_seat = _get_updated_seat_1(seat_layout_array, row, col)
             updated_layout_array[row, col] = updated_seat
     return updated_layout_array
 
 
-def _get_updated_seat(seat_layout_array, row: int, col: int):
+def _get_updated_seat_1(seat_layout_array, row: int, col: int):
     """Returns the updated seat value."""
     row_min = max(0, row - 1)
     col_min = max(0, col - 1)
@@ -95,7 +100,135 @@ def _get_updated_seat(seat_layout_array, row: int, col: int):
         return seat
 
 
-def _get_occupied_seats(seat_layout_array):
+def _get_updated_seat_layout_2(seat_layout_array):
+    """Finds the neighboor count of each seat and updates the layout.
+
+    Args:
+        seat_layout_array (numpy.array)
+    """
+    rows, cols = seat_layout_array.shape
+    # tuple of tuples of the coordinates of the free and occupied seats
+    free_seats = tuple(zip(*np.where(seat_layout_array == 'L')))
+    occupied_seats = tuple(zip(*np.where(seat_layout_array == '#')))
+
+    # a dictionary with (index: is_occupied) pairs
+    seat_ids = {_to_index(x, cols): 0 for x in free_seats}
+    seat_ids.update({_to_index(x, cols): 1 for x in occupied_seats})
+
+    # pairs of {seat_id: number_of_neighboors}
+    neighboor_count = {k: 0 for k in seat_ids.keys()}
+
+    for row in range(rows):
+        min_row_index = _to_index((row, 0), cols)
+        max_row_index = _to_index((row, cols), cols)
+        row_keys = [
+            k for k, v in seat_ids.items() if min_row_index <= k < max_row_index
+        ]
+        _update_neighbour_count_of_same_keys(neighboor_count, seat_ids, row_keys)
+
+    for col in range(cols):
+        col_keys = [k for k, v in seat_ids.items() if k % cols == col]
+        _update_neighbour_count_of_same_keys(neighboor_count, seat_ids, col_keys)
+
+    for diag_1 in range(-rows + 1, rows):
+        if diag_1 < 0:
+            main_diag_keys = [
+                k for k, v in seat_ids.items() if k % (cols + 1) == (cols + 1) +
+                diag_1 and not _is_below_main_diag(k, cols)
+            ]
+        else:
+            main_diag_keys = [
+                k for k, v in seat_ids.items()
+                if k % (cols + 1) == diag_1 and _is_below_main_diag(k, cols)
+            ]
+        _update_neighbour_count_of_same_keys(neighboor_count, seat_ids,
+                                             main_diag_keys)
+
+    for diag2 in range(-rows + 1, rows):
+        if diag2 < 0:
+            sec_diag_keys = [
+                k for k, v in seat_ids.items() if k % (cols - 1) == (cols - 1) +
+                diag2 and not _is_below_sec_diag(k, cols)
+            ]
+        else:
+            sec_diag_keys = [
+                k for k, v in seat_ids.items()
+                if k % (cols - 1) == diag2 and _is_below_sec_diag(k, cols)
+            ]
+        _update_neighbour_count_of_same_keys(neighboor_count, seat_ids,
+                                             sec_diag_keys)
+
+    updated_layout_array = seat_layout_array.copy()
+    for index, ncount in neighboor_count.items():
+        coords = _to_coords(index, cols)
+        if seat_ids[index] == 0 and ncount == 0:
+            updated_layout_array[coords] = '#'
+        if seat_ids[index] == 1 and ncount >= 5:
+            updated_layout_array[coords] = 'L'
+
+    return updated_layout_array
+
+
+def _update_neighbour_count_of_same_keys(neighboor_count: dict, seat_ids: dict,
+                                         keys: List[int]):
+    """Updates the count of the occupied neighboors for each of the keys.
+
+    For example if the keys are [1,2,3] and seat_ids = {1:1, 2:0, 3:1} after the
+    iterations the neighboor count of seat with index 2 is increased by 2, while
+    the other 2 keys are not affected (because they have 1 empty seat neighboor)
+    """
+    keys.sort()
+    for ind, key in enumerate(keys):
+        if not ind:
+            # first key has no left neighboor
+            prev_seat = None
+        else:
+            prev_seat_key = keys[ind - 1]
+            prev_seat = seat_ids[prev_seat_key]
+        if ind == len(keys) - 1:
+            # last key has no right neighboor
+            next_seat = None
+        else:
+            next_seat_key = keys[ind + 1]
+            next_seat = seat_ids[next_seat_key]
+
+        neighboor_count[key] += (int(next_seat == 1) + int(prev_seat == 1))
+
+
+def _to_index(coords: List[int], cols: int):
+    """Converts 2D coords to 1d index.
+
+    The formula used for input (x,y) and matrix NxN is
+    index = x * N + y
+    """
+    row, col = coords
+    return row * cols + col
+
+
+def _to_coords(index: int, cols: int):
+    """Converts the index to 2D coords.
+
+    The x coordinate is the quotient and the y the remained of the
+    division index / cols
+    """
+    return divmod(index, cols)
+
+
+def _is_below_main_diag(index: int, cols: int):
+    """Returns if the element with the given index is below the main primary
+    diagonal."""
+    x, y = divmod(index, cols)
+    return y >= x
+
+
+def _is_below_sec_diag(index: int, cols: int):
+    """Returns if the element with the given index is below the secondary
+    diagonal."""
+    x, y = divmod(index, cols)
+    return y >= -x + cols - 1
+
+
+def _get_occupied_seats_from_layout(seat_layout_array):
     seat_count = dict(zip(*np.unique(seat_layout_array, return_counts=True)))
     return seat_count.get('#', 0)
 
@@ -111,8 +244,12 @@ def solve():
     seat_layout_list = get_input_list()
 
     # PART 1
-    occupied_seats = solve_1(seat_layout_list)
-    print(f'[PART 1] {occupied_seats} occupied seats')
+    occupied_seats_1 = get_occupied_seats(seat_layout_list, 1)
+    print(f'[PART 1] {occupied_seats_1} occupied seats')
+
+    # PART 2
+    occupied_seats_2 = get_occupied_seats(seat_layout_list, 2)
+    print(f'[PART 2] {occupied_seats_2} occupied seats')
 
 
 if __name__ == '__main__':
