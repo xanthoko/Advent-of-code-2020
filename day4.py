@@ -1,6 +1,6 @@
 import re
 
-from utils import get_input_text_from_url
+from utils import get_input_text
 
 
 def get_input_passports():
@@ -8,7 +8,7 @@ def get_input_passports():
     Returns:
         list of strings: The list of passport strings
     """
-    input_text = get_input_text_from_url(4)
+    input_text = get_input_text(4)
     passports = input_text.split('\n\n')
 
     return passports

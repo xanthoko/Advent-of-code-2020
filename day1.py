@@ -1,10 +1,10 @@
 from math import prod
-from utils import get_input_text_from_url
+from utils import get_input_text
 
 
 def get_input_list():
     """Returns list of integers"""
-    input_text = get_input_text_from_url(1)
+    input_text = get_input_text(1)
     splited_str_input_list = input_text.split('\n')
     input_list = list(map(int, splited_str_input_list))
     return input_list

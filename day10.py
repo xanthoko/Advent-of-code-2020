@@ -1,10 +1,10 @@
 from typing import List
 
-from utils import get_input_text_from_url
+from utils import get_input_text
 
 
 def get_input_list():
-    input_text = get_input_text_from_url(10)
+    input_text = get_input_text(10)
     str_input_list = input_text.split('\n')
     input_list = list(map(int, str_input_list))
     return input_list

@@ -1,11 +1,11 @@
 import numpy as np
 from typing import List
 
-from utils import get_input_text_from_url
+from utils import get_input_text
 
 
 def get_input_list():
-    input_text = get_input_text_from_url(11)
+    input_text = get_input_text(11)
     str_input_list = input_text.split('\n')
     return str_input_list
 

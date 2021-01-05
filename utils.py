@@ -1,6 +1,16 @@
 import requests
 
 
+def get_input_text(day):
+    with open(f'inputs/day{day}.txt', 'r') as f:
+        return f.read()
+
+
+def get_example_input_text():
+    with open('example.txt', 'r') as f:
+        return f.read()
+
+
 def get_input_text_from_url(day):
     """
     Returns:
@@ -24,8 +34,3 @@ def get_input_text_from_url(day):
         raise ValueError('Invalid session cookie')
 
     return resp.text[:-1]  # remove the last \n
-
-
-def get_example_input():
-    with open('temp.txt', 'r') as f:
-        return f.read()

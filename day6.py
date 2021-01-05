@@ -1,12 +1,12 @@
 from collections import Counter
 from functools import reduce
 
-from utils import get_input_text_from_url
+from utils import get_input_text
 
 
 def get_input_list():
     """Returns list of answers per group"""
-    input_text = get_input_text_from_url(6)
+    input_text = get_input_text(6)
     input_text = input_text
     # split answers per group
     by_group_anwers = input_text.split('\n\n')

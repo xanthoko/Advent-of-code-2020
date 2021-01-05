@@ -1,4 +1,4 @@
-from utils import get_input_text_from_url
+from utils import get_input_text
 
 
 def get_input_list():
@@ -7,7 +7,7 @@ def get_input_list():
         {'policy': '', 'password': ''}, ...
     ]
     """
-    input_text = get_input_text_from_url(2)
+    input_text = get_input_text(2)
     splited_str_input_list = input_text.split('\n')
     input_list = [{
         'policy': x.split(':')[0],
