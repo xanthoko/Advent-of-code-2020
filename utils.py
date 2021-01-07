@@ -7,7 +7,7 @@ def get_input_text(day):
 
 
 def get_example_input_text():
-    with open('example.txt', 'r') as f:
+    with open('inputs/example.txt', 'r') as f:
         return f.read()
 
 
