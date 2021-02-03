@@ -7,7 +7,7 @@ from utils import get_input_text, get_example_input_text
 
 def get_input_list():
     input_text = get_input_text(20)
-    input_text = get_example_input_text()
+    # input_text = get_example_input_text()
 
     full_tiles = input_text.split('\n\n')
     tiles = {}
@@ -28,11 +28,6 @@ def solve1(tiles: dict):
     # corner tiles must have 4 lonely edges (2 normal and 2 reversed)
     corner_tile_ids = [key for key in ltc if ltc[key] == 4]
     return prod(corner_tile_ids)
-
-
-def solve2(tiles: dict):
-    rows = []
-    not_used_tiles = list(tiles.keys())
 
 
 def _get_tile_edges(tiles: dict):
@@ -58,6 +53,93 @@ def _get_tile_edges(tiles: dict):
     return tile_edges
 
 
+def solve2(tiles: dict):
+    not_used_tiles = list(tiles.keys())
+    rows = []
+    # row_ids = []
+    r = 0
+    while not_used_tiles:
+        if r == 2:
+            break
+        row, not_used_tiles = _get_filled_row(tiles, not_used_tiles)
+        # print(not_used_tiles)
+        rows.append(row)
+        # print(row.shape)
+        if r == 1:
+            _print(row)
+        print(row.shape)
+        print('===')
+        # print('adssad')
+        r += 1
+
+
+def _get_filled_row(tiles, not_used_tiles):
+    row = tiles[not_used_tiles[0]]
+    print(not_used_tiles[0])
+    not_used_tiles = not_used_tiles[1:]  # remove first tile
+    row, not_used_tiles, row_ids = _fill_to_the_right(tiles, not_used_tiles, row)
+    # row = np.flip(row, 1)
+    # print('flip')
+    # row, not_used_tiles, row_ids2 = _fill_to_the_right(tiles, not_used_tiles, row)
+    # print(row_ids + row_ids2)
+    return row, not_used_tiles
+
+
+def _fill_to_the_right(tiles, not_used_tiles, row):
+    w = np.array(['|'] * 10)
+    w = np.reshape(w, (10, 1))
+    row_ids = []
+    while True:
+        for tile_id in not_used_tiles:
+            check_tile = tiles[tile_id]
+            neighbor = _get_right_neighbor(row, check_tile)
+            if neighbor is not None:
+                # if tile_id == 1847:
+                # _print(row)
+                # print('das---das')
+                # _print(neighbor)
+                # row = np.concatenate((row, w), axis=1)
+                row = np.concatenate((row, neighbor), axis=1)
+                row_ids.append(tile_id)
+                not_used_tiles.remove(tile_id)
+                break
+        else:
+            break
+    return row, not_used_tiles, row_ids
+
+
+def _get_right_neighbor(tile1: np.array, tile2: np.array):
+    tile1_edge = list(tile1[:, -1])
+    tile2_left_edge = list(tile2[:, 0])
+    tile2_right_edge = list(tile2[:, -1])
+    tile2_top_edge = list(tile2[0, :])
+    tile2_bot_edge = list(tile2[-1, :])
+
+    if tile1_edge == tile2_left_edge:
+        return tile2
+    elif tile1_edge == tile2_left_edge[::-1]:
+        return np.flip(tile2, 0)  # flip in x axis
+    elif tile1_edge == tile2_right_edge:
+        return np.flip(tile2, 1)  # flip in y axis
+    elif tile1_edge == tile2_right_edge[::-1]:
+        return np.flip(tile2, (0, 1))  # flip in both axis
+    elif tile1_edge == tile2_top_edge:
+        return np.flip(np.rot90(tile2, 1), 0)
+    elif tile1_edge == tile2_top_edge[::-1]:
+        return np.rot90(tile2, 0)
+    elif tile1_edge == tile2_bot_edge:
+        return np.rot90(tile2, 3)
+    elif tile1_edge == tile2_bot_edge[::-1]:
+        return np.flip(np.rot90(tile2, 3), 0)
+    else:
+        return
+
+
+def _print(tile):
+    str_rows = [''.join(list(x)) for x in tile]
+    print('\n'.join(str_rows))
+
+
 def solve():
     tiles = get_input_list()
 
@@ -67,13 +149,9 @@ def solve():
 
     # PART 2
     non_sea_monster = solve2(tiles)
-    print(f'[PART 2] {non_sea_monster} # are not part of a monster')
+    # print(f'[PART 2] {non_sea_monster} # are not part of a monster')
 
 
 if __name__ == '__main__':
     solve()
-"""
-                  # 
-#    ##    ##    ###
- #  #  #  #  #  #   
-"""
+    pass
