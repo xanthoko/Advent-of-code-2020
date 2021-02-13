@@ -1,5 +1,6 @@
+import re
 import numpy as np
-from typing import List
+from typing import List, Tuple
 
 from utils import get_input_text
 
@@ -11,47 +12,37 @@ def get_input_list():
 
 
 def solve1(tiles: List[str]) -> set:
-    flipped = set()
+    black_tiles = set()
     for tile in tiles:
-        tile_index = _get_tile_index(tile)
-        if tile_index not in flipped:
+        rexp = re.compile(r'e|w|se|sw|ne|nw')
+        moves = rexp.findall(tile)
+
+        tile_index = _get_tile_index(moves)
+        if tile_index not in black_tiles:
             # white face is being flipped
-            flipped.add(tile_index)
+            black_tiles.add(tile_index)
         else:
             # black face is being flipped
-            flipped.remove(tile_index)
-    return flipped
+            black_tiles.remove(tile_index)
+    return black_tiles
 
 
-def _get_tile_index(tile_steps: str):
+def _get_tile_index(moves: List[str]) -> Tuple[int, int]:
+    DIR_COR_MAP = {
+        'w': (-1, 0),
+        'e': (1, 0),
+        'ne': (0.5, -1),
+        'nw': (-0.5, -1),
+        'se': (0.5, 1),
+        'sw': (-0.5, 1)
+    }
+
     tile_x = 0
     tile_y = 0
-    parse_index = 0
-    while parse_index < len(tile_steps):
-        direction = tile_steps[parse_index]
-        if direction == 'w':
-            tile_x -= 1
-            parse_index += 1
-            # print(direction)
-        elif direction == 'e':
-            tile_x += 1
-            parse_index += 1
-        else:
-            next_dir = tile_steps[parse_index + 1]
-            full_dir = direction + next_dir
-            if full_dir == 'ne':
-                tile_x += 0.5
-                tile_y -= 1
-            elif full_dir == 'nw':
-                tile_x -= 0.5
-                tile_y -= 1
-            elif full_dir == 'se':
-                tile_x += 0.5
-                tile_y += 1
-            elif full_dir == 'sw':
-                tile_x -= 0.5
-                tile_y += 1
-            parse_index += 2
+    for move in moves:
+        dx, dy = DIR_COR_MAP[move]
+        tile_x += dx
+        tile_y += dy
 
     return (tile_x, tile_y)
 
