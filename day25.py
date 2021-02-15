@@ -1,10 +1,8 @@
-from utils import get_input_text, get_example_input_text
-from time import time
+from utils import get_input_text
 
 
 def get_input():
     input_text = get_input_text(25)
-    # input_text = get_example_input_text()
 
     return map(int, input_text.split('\n'))
 
@@ -35,10 +33,6 @@ def _get_key(subject_number: int, loop_size: int) -> int:
         value *= subject_number
         value = value % 20201227
     return value
-
-
-def solve2():
-    pass
 
 
 def solve():
