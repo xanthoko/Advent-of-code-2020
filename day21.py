@@ -1,12 +1,10 @@
 from typing import List
-from collections import defaultdict, Counter
 
-from utils import get_input_text, get_example_input_text
+from utils import get_input_text
 
 
 def get_input_list():
     input_text = get_input_text(21)
-    # input_text = get_example_input_text()
 
     foods_str = input_text.split('\n')
     foods = []
@@ -20,6 +18,8 @@ def get_input_list():
 
 
 def solve1(foods: List[dict]):
+    """Solution is greatly influenced by this
+    https://github.com/aboutroots/AoC2020/blob/master/day21.py"""
     all_ingredients_with_duplicates = []
     all_allergens = set()
     for food in foods:
